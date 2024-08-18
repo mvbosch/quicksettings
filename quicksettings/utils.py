@@ -44,5 +44,5 @@ def validate_types(
         if not isinstance(value, expected_type):  # type: ignore[arg-type]
             raise TypeError(
                 f"Invalid type for {class_name}.{field_name}\n\t"
-                f"Expected {expected_type.__name__}, got {type(value).__name__}"
+                f"Expected {expected_type}, got {type(value).__name__}"
             )
