@@ -1,6 +1,13 @@
 import pytest
 
-from .conftest import BasicSettings, BoolSettings
+from .conftest import (
+    BasicSettings,
+    BoolSettings,
+    BasicListSettings,
+    BasicDictSettings,
+    NestedDataSettings,
+    NestedMappingSettings,
+)
 
 
 def test_literal_values(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -20,7 +27,7 @@ def test_env_prefix(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("APP_WEIGHT", "0.085")
     monkeypatch.setenv("APP_PORT", "8080")
     monkeypatch.setenv("APP_DESCRIPTION", "This is a test")
-    monkeypatch.setattr(BasicSettings, "_env_prefix", "APP_")
+    monkeypatch.setattr(BasicSettings, "env_prefix", "APP_")
     settings = BasicSettings()
     assert settings.DEBUG is True
     assert settings.WEIGHT == 0.085
@@ -51,3 +58,45 @@ def test_invalid_bool_values(monkeypatch: pytest.MonkeyPatch, value: str) -> Non
     monkeypatch.setenv("DEBUG", value)
     with pytest.raises(ValueError):
         BoolSettings()
+
+
+def test_basic_list_settings(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("NOTHING_SCARY", "[1,2,3,4.4,5]")
+    settings = BasicListSettings()
+    assert settings.NOTHING_SCARY == [1, 2, 3, 4.4, 5]
+
+
+def test_invalid_list_settings(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("NOTHING_SCARY", "[1,2,3,4,5,'hello']")
+    with pytest.raises(TypeError):
+        BasicListSettings()
+
+
+def test_basic_dict_settings(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("MAPPINGS", '{"follow": "me", "to": "face"}')
+    settings = BasicDictSettings()
+    assert settings.MAPPINGS == {"follow": "me", "to": "face"}
+
+
+def test_nested_data_settings(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv(
+        "NESTED",
+        '[{"wrecklessly": "swallow", "blunted": "knives"}, {"wrecklessly": "follow", "blunted": "minds"}]',
+    )
+    settings = NestedDataSettings()
+    assert settings.NESTED == [
+        {"wrecklessly": "swallow", "blunted": "knives"},
+        {"wrecklessly": "follow", "blunted": "minds"},
+    ]
+
+
+def test_nested_mapping_settings(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv(
+        "STILL_NOT_SCARY",
+        '{"wrecklessly": ["swallow", "follow"], "blunted": ["knives", "minds"]}',
+    )
+    settings = NestedMappingSettings()
+    assert settings.STILL_NOT_SCARY == {
+        "wrecklessly": ["swallow", "follow"],
+        "blunted": ["knives", "minds"],
+    }
