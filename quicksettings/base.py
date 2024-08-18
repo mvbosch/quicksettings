@@ -10,22 +10,28 @@ from quicksettings.utils import validate_types
 class BaseSettings:
     """Base settings class."""
 
-    def __init__(self):
+    _env_prefix: InitVar[str]
+
+    def __init__(self) -> None:
+        true_bool_values = ("true", "1", "yes", "y", "t")
+        false_bool_values = ("false", "0", "no", "n", "f")
         required_missing = []
+        env_prefix = self._env_prefix if hasattr(self, "_env_prefix") else ""
+
         for field_ in fields(self):
             if field_.name.startswith("_"):
                 continue
-            raw_value = os.getenv(f"{self._env_prefix}{field_.name}", field_.default)
+            raw_value = os.getenv(f"{env_prefix}{field_.name}", field_.default)
             if raw_value is MISSING:
                 required_missing.append(field_.name)
 
             if field_.type is bool:
                 lowstr_value = os.getenv(
-                    f"{self._env_prefix}{field_.name}", str(field_.default)
+                    f"{env_prefix}{field_.name}", str(field_.default)
                 ).lower()
-                if lowstr_value in self._true_bool_values:
+                if lowstr_value in true_bool_values:
                     value = True
-                elif lowstr_value in self._false_bool_values:
+                elif lowstr_value in false_bool_values:
                     value = False
                 else:
                     raise ValueError(
@@ -44,12 +50,15 @@ class BaseSettings:
                 value = literal_eval(raw_value.strip(" \n"))
                 validate_types(
                     value=value,
-                    expected_type=field_.type,
+                    expected_type=field_.type,  # type: ignore[arg-type]
                     class_name=self.__class__.__name__,
                     field_name=field_.name,
                 )
             else:
-                value = MISSING
+                raise TypeError(
+                    f"Invalid type for {self.__class__.__name__}.{field_.name}\n\t"
+                    f"Expected {field_.type.__name__}, got {type(raw_value).__name__}"
+                )
             setattr(self, field_.name, value)
 
         if required_missing:
@@ -57,7 +66,3 @@ class BaseSettings:
                 f"Missing required field for {self.__class__.__name__}:\n\t"
                 + "\n\t".join(required_missing)
             )
-
-    _env_prefix: InitVar[str] = ""
-    _true_bool_values: InitVar[tuple] = ("true", "1", "yes", "y", "t")
-    _false_bool_values: InitVar[tuple] = ("false", "0", "no", "n", "f")

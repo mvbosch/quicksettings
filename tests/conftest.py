@@ -1,26 +1,16 @@
 from dataclasses import dataclass
 
-import pytest
-
 from quicksettings import BaseSettings
 
 
-@pytest.fixture()
-def basic_settings() -> type[BaseSettings]:
-    @dataclass(init=False)
-    class Settings(BaseSettings):
-        DEBUG: bool
-        WEIGHT: float
-        PORT: int
-        DESCRIPTION: str
-
-    return Settings
+@dataclass(init=False)
+class BasicSettings(BaseSettings):
+    DEBUG: bool
+    WEIGHT: float
+    PORT: int
+    DESCRIPTION: str
 
 
-@pytest.fixture()
-def bool_settings() -> type[BaseSettings]:
-    @dataclass(init=False)
-    class Settings(BaseSettings):
-        DEBUG: bool
-
-    return Settings
+@dataclass(init=False)
+class BoolSettings(BaseSettings):
+    DEBUG: bool
