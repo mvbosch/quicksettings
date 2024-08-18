@@ -10,13 +10,13 @@ from quicksettings.utils import validate_types
 class BaseSettings:
     """Base settings class."""
 
-    _env_prefix: InitVar[str]
+    env_prefix: InitVar[str]
 
     def __init__(self) -> None:
         true_bool_values = ("true", "1", "yes", "y", "t")
         false_bool_values = ("false", "0", "no", "n", "f")
         required_missing = []
-        env_prefix = self._env_prefix if hasattr(self, "_env_prefix") else ""
+        env_prefix = self.env_prefix if hasattr(self, "env_prefix") else ""
 
         for field_ in fields(self):
             if field_.name.startswith("_"):
