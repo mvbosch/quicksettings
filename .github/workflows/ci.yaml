@@ -47,7 +47,7 @@ jobs:
         run: rye run pytest
       - name: Test with Coverage
         if: matrix.python-version == '3.12'
-        run: rye run pytest examples tests --cov=quicksettings --cov-report=xml
+        run: rye run pytest tests --cov=quicksettings --cov-report=xml
       - uses: actions/upload-artifact@v3
         if: matrix.python-version == '3.12'
         with:
