@@ -10,6 +10,8 @@
 #   universal: false
 
 -e file:.
+coverage==7.6.1
+    # via pytest-cov
 iniconfig==2.0.0
     # via pytest
 packaging==24.1
@@ -17,3 +19,5 @@ packaging==24.1
 pluggy==1.5.0
     # via pytest
 pytest==8.3.2
+    # via pytest-cov
+pytest-cov==5.0.0

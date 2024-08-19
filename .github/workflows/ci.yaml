@@ -43,13 +43,13 @@ jobs:
       - name: Set pythonpath
         run: echo "PYTHONPATH=$PWD" >> $GITHUB_ENV
       - name: Test
-        if: matrix.python-version != '3.11'
+        if: matrix.python-version != '3.12'
         run: rye run pytest
       - name: Test with Coverage
-        if: matrix.python-version == '3.11'
+        if: matrix.python-version == '3.12'
         run: rye run pytest examples tests --cov=quicksettings --cov-report=xml
       - uses: actions/upload-artifact@v3
-        if: matrix.python-version == '3.11'
+        if: matrix.python-version == '3.12'
         with:
           name: coverage-xml
           path: coverage.xml
