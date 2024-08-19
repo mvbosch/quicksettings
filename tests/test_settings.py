@@ -7,6 +7,7 @@ from .conftest import (
     BasicDictSettings,
     NestedDataSettings,
     NestedMappingSettings,
+    NullableSettings,
 )
 
 
@@ -100,3 +101,8 @@ def test_nested_mapping_settings(monkeypatch: pytest.MonkeyPatch) -> None:
         "wrecklessly": ["swallow", "follow"],
         "blunted": ["knives", "minds"],
     }
+
+
+def test_allow_nullable() -> None:
+    settings = NullableSettings()
+    assert settings.DEBUG is None

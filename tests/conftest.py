@@ -36,3 +36,8 @@ class NestedDataSettings(BaseSettings):
 @dataclass(init=False)
 class NestedMappingSettings(BaseSettings):
     STILL_NOT_SCARY: dict[str, list[str]]
+
+
+@dataclass(init=False)
+class NullableSettings(BaseSettings):
+    DEBUG: bool | None
