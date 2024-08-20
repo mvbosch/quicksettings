@@ -8,6 +8,7 @@ from .conftest import (
     NestedDataSettings,
     NestedMappingSettings,
     NullableSettings,
+    LiteralSettings,
 )
 
 
@@ -106,3 +107,20 @@ def test_nested_mapping_settings(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_allow_nullable() -> None:
     settings = NullableSettings()
     assert settings.DEBUG is None
+
+
+def test_literal_fields(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("ENVIRONMENT", "dev")
+    settings = LiteralSettings()
+    assert settings.ENVIRONMENT == "dev"
+
+
+def test_invalid_literal_field(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("ENVIRONMENT", "abrokenskyspills")
+    with pytest.raises(ValueError):
+        LiteralSettings()
+
+
+def test_required_missing_literal_field() -> None:
+    with pytest.raises(ValueError):
+        LiteralSettings()

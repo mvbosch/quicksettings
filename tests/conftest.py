@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Literal
 
 from quicksettings import BaseSettings
 
@@ -41,3 +42,8 @@ class NestedMappingSettings(BaseSettings):
 @dataclass(init=False)
 class NullableSettings(BaseSettings):
     DEBUG: bool | None
+
+
+@dataclass(init=False)
+class LiteralSettings(BaseSettings):
+    ENVIRONMENT: Literal["dev", "qa", "prod"]
