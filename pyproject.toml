@@ -1,6 +1,6 @@
 [project]
 name = "quicksettings"
-version = "0.1.0"
+version = "0.2.0"
 description = "Manage python application config with ease."
 authors = [
     { name = "mvbosch", email = "michael@vonbosch.co.za" }

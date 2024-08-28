@@ -1,7 +1,7 @@
 import os
 from ast import literal_eval
 from dataclasses import MISSING, InitVar, dataclass, fields
-from typing import Literal, get_origin, get_args
+from typing import Any, Literal, get_origin, get_args
 from types import UnionType
 
 from quicksettings.utils import validate_types
@@ -24,10 +24,16 @@ class BaseSettings:
                 continue
 
             origin, origin_args = get_origin(field_.type), get_args(field_.type)
-            field_required = origin is UnionType and type(None) not in origin_args
+            field_required = origin is not UnionType and type(None) not in origin_args
             raw_value = os.getenv(f"{env_prefix}{field_.name}", field_.default)
+            value: Any
 
-            if field_.type is bool:
+            if field_required and raw_value is MISSING:
+                value = MISSING
+                required_missing.append(field_.name)
+            elif not field_required and raw_value is MISSING:
+                value = None
+            elif field_.type is bool:
                 lowstr_value = os.getenv(
                     f"{env_prefix}{field_.name}", str(field_.default)
                 ).lower()
@@ -41,14 +47,14 @@ class BaseSettings:
                         f"`{raw_value}` is not a valid boolean value"
                     )
             elif field_.type is str:
-                value = str(raw_value)  # type: ignore[assignment]
+                value = str(raw_value)
             elif origin is Literal:
                 if raw_value not in origin_args:
                     raise ValueError(
                         f"Invalid value for {self.__class__.__name__}.{field_.name}\n\t"
                         f"`{raw_value}` is not a valid option"
                     )
-                value = raw_value  # type: ignore[assignment]
+                value = raw_value
             elif field_.type in (int, float):
                 try:
                     value = field_.type(raw_value)
@@ -65,13 +71,7 @@ class BaseSettings:
                     class_name=self.__class__.__name__,
                     field_name=field_.name,
                 )
-            elif not field_required and raw_value is MISSING:
-                value = None
-            else:
-                value = MISSING  # type: ignore[assignment]
 
-            if field_required and value is MISSING:
-                required_missing.append(field_.name)
             setattr(self, field_.name, value)
 
         if required_missing:

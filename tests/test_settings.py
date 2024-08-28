@@ -37,6 +37,14 @@ def test_env_prefix(monkeypatch: pytest.MonkeyPatch) -> None:
     assert settings.DESCRIPTION == "This is a test"
 
 
+def test_missing_required_str_field(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("DEBUG", "true")
+    monkeypatch.setenv("WEIGHT", "0.085")
+    monkeypatch.setenv("PORT", "8080")
+    with pytest.raises(ValueError):
+        BasicSettings()
+
+
 @pytest.mark.parametrize(
     "value", ["true", "1", "yes", "y", "t", "TRUE", "YES", "Y", "T"]
 )
