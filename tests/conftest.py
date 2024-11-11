@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import Literal
 
 from quicksettings import BaseSettings
@@ -52,3 +53,14 @@ class LiteralSettings(BaseSettings):
 @dataclass(init=False)
 class DefaultFactorySettings(BaseSettings):
     ONE_TWO_THREE: list[int] = field(default_factory=lambda: [1, 2, 3])
+
+
+class EnvType(Enum):
+    DEV = "dev"
+    QA = "qa"
+    PROD = "prod"
+
+
+@dataclass(init=False)
+class EnumSettings(BaseSettings):
+    ENVIRONMENT: EnvType

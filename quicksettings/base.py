@@ -1,6 +1,7 @@
 import os
 from ast import literal_eval
 from dataclasses import MISSING, InitVar, dataclass, fields
+from enum import Enum
 from typing import Literal, get_origin, get_args
 from types import UnionType
 
@@ -61,7 +62,7 @@ class BaseSettings:
                         f"`{raw_value}` is not a valid option"
                     )
                 value = raw_value
-            elif field_.type in (int, float):
+            elif field_.type in (int, float) or issubclass(field_.type, Enum):
                 try:
                     value = field_.type(raw_value)
                 except ValueError as e:

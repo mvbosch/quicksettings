@@ -6,6 +6,8 @@ from .conftest import (
     BasicListSettings,
     BasicDictSettings,
     DefaultFactorySettings,
+    EnumSettings,
+    EnvType,
     LiteralSettings,
     NestedDataSettings,
     NestedMappingSettings,
@@ -144,3 +146,9 @@ def test_env_default_factory_priority(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("ONE_TWO_THREE", "[4,5,6]")
     settings = DefaultFactorySettings()
     assert settings.ONE_TWO_THREE == [4, 5, 6]
+
+
+def test_enum_settings(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("ENVIRONMENT", "qa")
+    settings = EnumSettings()
+    assert settings.ENVIRONMENT == EnvType.QA
