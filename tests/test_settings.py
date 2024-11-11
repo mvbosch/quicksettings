@@ -5,10 +5,14 @@ from .conftest import (
     BoolSettings,
     BasicListSettings,
     BasicDictSettings,
+    DefaultFactorySettings,
+    EnumSettings,
+    EnvType,
+    ForwardRefSettings,
+    LiteralSettings,
     NestedDataSettings,
     NestedMappingSettings,
     NullableSettings,
-    LiteralSettings,
 )
 
 
@@ -132,3 +136,26 @@ def test_invalid_literal_field(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_required_missing_literal_field() -> None:
     with pytest.raises(ValueError):
         LiteralSettings()
+
+
+def test_default_factory() -> None:
+    settings = DefaultFactorySettings()
+    assert settings.ONE_TWO_THREE == [1, 2, 3]
+
+
+def test_env_default_factory_priority(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("ONE_TWO_THREE", "[4,5,6]")
+    settings = DefaultFactorySettings()
+    assert settings.ONE_TWO_THREE == [4, 5, 6]
+
+
+def test_enum_settings(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("ENVIRONMENT", "qa")
+    settings = EnumSettings()
+    assert settings.ENVIRONMENT == EnvType.QA
+
+
+def test_forward_ref_settings(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("ENVIRONMENT", "hello")
+    with pytest.raises(ValueError):
+        ForwardRefSettings()
