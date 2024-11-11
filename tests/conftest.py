@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Literal
 
 from quicksettings import BaseSettings
@@ -47,3 +47,8 @@ class NullableSettings(BaseSettings):
 @dataclass(init=False)
 class LiteralSettings(BaseSettings):
     ENVIRONMENT: Literal["dev", "qa", "prod"]
+
+
+@dataclass(init=False)
+class DefaultFactorySettings(BaseSettings):
+    ONE_TWO_THREE: list[int] = field(default_factory=lambda: [1, 2, 3])

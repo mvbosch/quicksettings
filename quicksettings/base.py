@@ -1,7 +1,7 @@
 import os
 from ast import literal_eval
 from dataclasses import MISSING, InitVar, dataclass, fields
-from typing import Any, Literal, get_origin, get_args
+from typing import Literal, get_origin, get_args
 from types import UnionType
 
 from quicksettings.utils import validate_types
@@ -25,8 +25,14 @@ class BaseSettings:
 
             origin, origin_args = get_origin(field_.type), get_args(field_.type)
             field_required = origin is not UnionType and type(None) not in origin_args
+            value = (
+                field_.default_factory()
+                if field_.default_factory is not MISSING
+                else MISSING
+            )
             raw_value = os.getenv(f"{env_prefix}{field_.name}", field_.default)
-            value: Any
+            if value is not MISSING and raw_value is MISSING:
+                raw_value = value
 
             if field_required and raw_value is MISSING:
                 value = MISSING
