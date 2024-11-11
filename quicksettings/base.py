@@ -18,6 +18,7 @@ class BaseSettings:
         true_bool_values = ("true", "1", "yes", "y", "t")
         false_bool_values = ("false", "0", "no", "n", "f")
         required_missing: list[str] = []
+        validation_errors: list[str] = []
         env_prefix = self.env_prefix if hasattr(self, "env_prefix") else ""
 
         for field_ in fields(self):
@@ -49,7 +50,7 @@ class BaseSettings:
                 elif lowstr_value in false_bool_values:
                     value = False
                 else:
-                    raise ValueError(
+                    validation_errors.append(
                         f"Invalid value for {self.__class__.__name__}.{field_.name}\n\t"
                         f"`{raw_value}` is not a valid boolean value"
                     )
@@ -57,7 +58,7 @@ class BaseSettings:
                 value = str(raw_value)
             elif origin is Literal:
                 if raw_value not in origin_args:
-                    raise ValueError(
+                    validation_errors.append(
                         f"Invalid value for {self.__class__.__name__}.{field_.name}\n\t"
                         f"`{raw_value}` is not a valid option"
                     )
@@ -65,11 +66,11 @@ class BaseSettings:
             elif field_.type in (int, float) or issubclass(field_.type, Enum):
                 try:
                     value = field_.type(raw_value)
-                except ValueError as e:
-                    raise ValueError(
+                except ValueError:
+                    validation_errors.append(
                         f"Invalid value for {self.__class__.__name__}.{field_.name}\n\t"
                         f"`{raw_value}` cannot be cast to type `{field_.type.__name__}`"
-                    ) from e
+                    )
             elif isinstance(raw_value, str) and origin in (list, dict):
                 value = literal_eval(raw_value.strip(" \n"))
                 validate_types(
@@ -82,7 +83,10 @@ class BaseSettings:
             setattr(self, field_.name, value)
 
         if required_missing:
-            raise ValueError(
+            validation_errors.append(
                 f"Missing required field for {self.__class__.__name__}:\n\t"
                 + "\n\t".join(required_missing)
             )
+
+        if validation_errors:
+            raise ValueError("\n".join(validation_errors))
