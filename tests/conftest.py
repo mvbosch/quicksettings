@@ -64,3 +64,8 @@ class EnvType(Enum):
 @dataclass(init=False)
 class EnumSettings(BaseSettings):
     ENVIRONMENT: EnvType
+
+
+@dataclass(init=False)
+class ForwardRefSettings(BaseSettings):
+    ENVIRONMENT: "EnvType"

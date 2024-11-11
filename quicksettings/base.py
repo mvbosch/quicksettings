@@ -25,6 +25,12 @@ class BaseSettings:
             if field_.name.startswith("_"):
                 continue
 
+            if isinstance(field_.type, str):
+                raise ValueError(
+                    f"Invalid type hint for {self.__class__.__name__}.{field_.name}\n\t"
+                    f"Forward references are not supported"
+                )
+
             origin, origin_args = get_origin(field_.type), get_args(field_.type)
             field_required = origin is not UnionType and type(None) not in origin_args
             value = (
@@ -63,7 +69,7 @@ class BaseSettings:
                         f"`{raw_value}` is not a valid option"
                     )
                 value = raw_value
-            elif field_.type in (int, float) or issubclass(field_.type, Enum):
+            elif field_.type in (int, float) or issubclass(field_.type, Enum):  # type: ignore[arg-type]
                 try:
                     value = field_.type(raw_value)
                 except ValueError:

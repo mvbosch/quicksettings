@@ -8,6 +8,7 @@ from .conftest import (
     DefaultFactorySettings,
     EnumSettings,
     EnvType,
+    ForwardRefSettings,
     LiteralSettings,
     NestedDataSettings,
     NestedMappingSettings,
@@ -152,3 +153,9 @@ def test_enum_settings(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("ENVIRONMENT", "qa")
     settings = EnumSettings()
     assert settings.ENVIRONMENT == EnvType.QA
+
+
+def test_forward_ref_settings(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("ENVIRONMENT", "hello")
+    with pytest.raises(ValueError):
+        ForwardRefSettings()
