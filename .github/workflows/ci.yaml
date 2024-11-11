@@ -30,7 +30,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
@@ -43,13 +43,13 @@ jobs:
       - name: Set pythonpath
         run: echo "PYTHONPATH=$PWD" >> $GITHUB_ENV
       - name: Test
-        if: matrix.python-version != '3.12'
+        if: matrix.python-version != '3.13'
         run: rye run pytest
       - name: Test with Coverage
-        if: matrix.python-version == '3.12'
+        if: matrix.python-version == '3.13'
         run: rye run pytest tests --cov=quicksettings --cov-report=xml
       - uses: actions/upload-artifact@v3
-        if: matrix.python-version == '3.12'
+        if: matrix.python-version == '3.13'
         with:
           name: coverage-xml
           path: coverage.xml
