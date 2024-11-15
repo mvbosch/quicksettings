@@ -69,3 +69,14 @@ class EnumSettings(BaseSettings):
 @dataclass(init=False)
 class ForwardRefSettings(BaseSettings):
     ENVIRONMENT: "EnvType"
+
+
+@dataclass(init=False)
+class UnionSettings(BaseSettings):
+    NAME: str | None
+    AGE: int | None
+
+
+@dataclass(init=False)
+class MultipleUnionSettings(BaseSettings):
+    NUMBER: int | str | None  # unsupported

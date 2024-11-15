@@ -2,6 +2,7 @@ import os
 from ast import literal_eval
 from dataclasses import MISSING, InitVar, dataclass, fields
 from enum import Enum
+from inspect import isclass
 from typing import Literal, get_origin, get_args
 from types import UnionType
 
@@ -33,6 +34,24 @@ class BaseSettings:
 
             origin, origin_args = get_origin(field_.type), get_args(field_.type)
             field_required = origin is not UnionType and type(None) not in origin_args
+
+            # unless there's a good use case for multiple types in a union, only allow
+            # unions between a single type and None
+            if origin is UnionType and (
+                len(origin_args) != 2
+                or (len(origin_args) == 2 and type(None) not in origin_args)
+            ):
+                raise ValueError(
+                    f"Invalid type hint for {self.__class__.__name__}.{field_.name}\n\t"
+                    f"Only unions between a single type and None are allowed"
+                )
+
+            expected_type = (
+                [arg for arg in origin_args if arg is not type(None)][0]
+                if origin is UnionType
+                else field_.type
+            )
+
             value = (
                 field_.default_factory()
                 if field_.default_factory is not MISSING
@@ -47,7 +66,7 @@ class BaseSettings:
                 required_missing.append(field_.name)
             elif not field_required and raw_value is MISSING:
                 value = None
-            elif field_.type is bool:
+            elif expected_type is bool:
                 lowstr_value = os.getenv(
                     f"{env_prefix}{field_.name}", str(field_.default)
                 ).lower()
@@ -60,7 +79,7 @@ class BaseSettings:
                         f"Invalid value for {self.__class__.__name__}.{field_.name}\n\t"
                         f"`{raw_value}` is not a valid boolean value"
                     )
-            elif field_.type is str:
+            elif expected_type is str:
                 value = str(raw_value)
             elif origin is Literal:
                 if raw_value not in origin_args:
@@ -69,9 +88,11 @@ class BaseSettings:
                         f"`{raw_value}` is not a valid option"
                     )
                 value = raw_value
-            elif field_.type in (int, float) or issubclass(field_.type, Enum):  # type: ignore[arg-type]
+            elif expected_type in (int, float) or (
+                isclass(expected_type) and issubclass(expected_type, Enum)
+            ):  # type: ignore[arg-type]
                 try:
-                    value = field_.type(raw_value)
+                    value = expected_type(raw_value)
                 except ValueError:
                     validation_errors.append(
                         f"Invalid value for {self.__class__.__name__}.{field_.name}\n\t"
