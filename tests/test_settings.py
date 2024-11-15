@@ -10,9 +10,11 @@ from .conftest import (
     EnvType,
     ForwardRefSettings,
     LiteralSettings,
+    MultipleUnionSettings,
     NestedDataSettings,
     NestedMappingSettings,
     NullableSettings,
+    UnionSettings,
 )
 
 
@@ -159,3 +161,17 @@ def test_forward_ref_settings(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("ENVIRONMENT", "hello")
     with pytest.raises(ValueError):
         ForwardRefSettings()
+
+
+def test_union_settings(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("NAME", "karl")
+    monkeypatch.setenv("AGE", "999")
+    settings = UnionSettings()
+    assert settings.NAME == "karl"
+    assert settings.AGE == 999
+
+
+def test_multiple_union_raises(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("NAME", "karl")
+    with pytest.raises(ValueError):
+        MultipleUnionSettings()
