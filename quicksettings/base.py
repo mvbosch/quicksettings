@@ -100,7 +100,7 @@ class BaseSettings:
                     )
             elif isinstance(raw_value, str) and origin in (list, dict):
                 value = literal_eval(raw_value.strip(" \n"))
-                validate_types(
+                value = validate_types(
                     value=value,
                     expected_type=field_.type,  # type: ignore[arg-type]
                     class_name=self.__class__.__name__,

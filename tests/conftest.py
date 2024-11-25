@@ -80,3 +80,23 @@ class UnionSettings(BaseSettings):
 @dataclass(init=False)
 class MultipleUnionSettings(BaseSettings):
     NUMBER: int | str | None  # unsupported
+
+
+@dataclass
+class Location:
+    lat: float
+    long: float
+
+
+@dataclass
+class District:
+    name: str
+    population: int
+    location: Location
+
+
+@dataclass(init=False)
+class NestedDataclassSettings(BaseSettings):
+    NAME: str
+    DISTRICTS: list[District]
+    HEAD_OFFICE_LOCATION: Location
