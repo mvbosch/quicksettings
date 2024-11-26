@@ -1,12 +1,11 @@
 import os
 from ast import literal_eval
-from dataclasses import MISSING, InitVar, dataclass, fields
-from enum import Enum
+from dataclasses import MISSING, InitVar, dataclass, fields, is_dataclass
 from inspect import isclass
 from typing import Literal, get_origin, get_args
 from types import UnionType
 
-from quicksettings.utils import validate_types
+from quicksettings.utils import cast_value
 
 
 @dataclass(init=False)
@@ -79,8 +78,6 @@ class BaseSettings:
                         f"Invalid value for {self.__class__.__name__}.{field_.name}\n\t"
                         f"`{raw_value}` is not a valid boolean value"
                     )
-            elif expected_type is str:
-                value = str(raw_value)
             elif origin is Literal:
                 if raw_value not in origin_args:
                     validation_errors.append(
@@ -88,23 +85,20 @@ class BaseSettings:
                         f"`{raw_value}` is not a valid option"
                     )
                 value = raw_value
-            elif expected_type in (int, float) or (
-                isclass(expected_type) and issubclass(expected_type, Enum)
-            ):  # type: ignore[arg-type]
-                try:
-                    value = expected_type(raw_value)
-                except ValueError:
-                    validation_errors.append(
-                        f"Invalid value for {self.__class__.__name__}.{field_.name}\n\t"
-                        f"`{raw_value}` cannot be cast to type `{field_.type.__name__}`"
-                    )
-            elif isinstance(raw_value, str) and origin in (list, dict):
+            elif isinstance(raw_value, str) and (
+                origin in (list, dict)
+                or isclass(expected_type)
+                and is_dataclass(expected_type)
+            ):
                 value = literal_eval(raw_value.strip(" \n"))
-                validate_types(
+                value = cast_value(
                     value=value,
-                    expected_type=field_.type,  # type: ignore[arg-type]
-                    class_name=self.__class__.__name__,
-                    field_name=field_.name,
+                    target_type=field_.type,  # type: ignore[arg-type]
+                )
+            else:
+                value = cast_value(
+                    value=raw_value,
+                    target_type=field_.type,  # type: ignore[arg-type]
                 )
 
             setattr(self, field_.name, value)

@@ -1,48 +1,51 @@
-from types import GenericAlias
+from dataclasses import fields, is_dataclass
+from datetime import date
+from enum import Enum
+from inspect import isclass
+from types import UnionType
 from typing import get_args, get_origin, Any
+from uuid import UUID
 
 
-def validate_types(
-    value: Any, expected_type: GenericAlias, class_name: str, field_name: str
-) -> None:
-    """Recursively validate that the value matches the expected type."""
+def cast_value(value: Any, target_type: Any) -> Any:
+    origin = get_origin(target_type)
+    origin_args = get_args(target_type)
 
-    origin = get_origin(expected_type)
+    if origin is None and isinstance(value, target_type):
+        return value
+    if type(value) in origin_args:
+        return value
+
+    # of course union types are a special case
+    if origin is UnionType and type(None) in origin_args:
+        if value is None:
+            return None
+        target_type = [arg for arg in origin_args if arg is not type(None)][0]
+    if target_type == date and isinstance(value, str):
+        return date.fromisoformat(value)
+    if target_type in (int, float, str, UUID):
+        return target_type(value)
+    if is_dataclass(target_type):
+        return instantiate_dataclass(target_type, value)  # type: ignore[arg-type]
+    if isclass(target_type) and issubclass(target_type, Enum):
+        return target_type(value)
     if origin is list:
-        if not isinstance(value, list):
-            raise TypeError(
-                f"Invalid type for {class_name}.{field_name}\n\tExpected list, got {type(value).__name__}"
-            )
-        item_type = get_args(expected_type)[0]
-        for item in value:
-            validate_types(
-                value=item,
-                expected_type=item_type,
-                class_name=class_name,
-                field_name=field_name,
-            )
-    elif origin is dict:
-        if not isinstance(value, dict):
-            raise TypeError(
-                f"Invalid type for {class_name}.{field_name}\n\tExpected dict, got {type(value).__name__}"
-            )
-        key_type, value_type = get_args(expected_type)
-        for k, v in value.items():
-            validate_types(
-                value=k,
-                expected_type=key_type,
-                class_name=class_name,
-                field_name=field_name,
-            )
-            validate_types(
-                value=v,
-                expected_type=value_type,
-                class_name=class_name,
-                field_name=field_name,
-            )
-    else:
-        if not isinstance(value, expected_type):  # type: ignore[arg-type]
-            raise TypeError(
-                f"Invalid type for {class_name}.{field_name}\n\t"
-                f"Expected {expected_type}, got {type(value).__name__}"
-            )
+        item_type = get_args(target_type)[0]
+        return [cast_value(item, item_type) for item in value]
+    if origin is dict:
+        key_type, value_type = get_args(target_type)
+        return {
+            cast_value(k, key_type): cast_value(v, value_type) for k, v in value.items()
+        }
+    raise TypeError(f"Cannot cast {value} to {target_type}")
+
+
+def instantiate_dataclass(cls: type[Any], data: dict[Any, Any]) -> Any:
+    if not is_dataclass(cls) or not isclass(cls):
+        raise ValueError(f"{cls} is not a dataclass")
+
+    init_values = {
+        field.name: cast_value(data.get(field.name), field.type)
+        for field in fields(cls)
+    }
+    return cls(**init_values)
