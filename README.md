@@ -38,9 +38,36 @@ If fields with no defaults are declared without corresponding environment variab
 * `Enum`
 * `list`
 * `dict`
+
+## New in v1.1.0
+
 * Other dataclasses
 
-`list` and `dict` types can even contain each other, nested.
+Example environment:
+```bash
+export POWER_SOURCES='[{"name":"coal","output": 20},{"name":"nuclear","output": 10000}]'
+```
+```py
+from dataclasses import dataclass, is_dataclass
+
+from quicksettings import BaseSettings
+
+
+@dataclass
+class PowerSource:
+    name: str
+    output: int
+
+
+@dataclass(init=False)
+class Settings(BaseSettings):
+    POWER_SOURCES: list[PowerSource]
+
+
+settings = Settings()
+assert is_dataclass(settings.POWER_SOURCES[0])  # True
+assert settings.POWER_SOURCES[1].name == "nuclear"  # True
+```
 
 ## Known limitations
 
