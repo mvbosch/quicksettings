@@ -1,6 +1,8 @@
 from datetime import date
 from dataclasses import dataclass
 
+import pytest
+
 from quicksettings.utils import instantiate_dataclass
 
 
@@ -74,20 +76,52 @@ class ServerFarm:
     hosts: list[Host]
 
 
-raw_server_farm_data = {
-    "name": "farm1",
-    "hosts": [
-        {
-            "ip_addresses": ["192.168.0.1", "127.0.0.1"],
-            "nodes": [{"lat": 0.0, "long": 0.0}, {"lat": 1.0, "long": 1.0}],
-        }
-    ],
-}
-
-
 def test_mixed_dataclasses() -> None:
-    server_farm = instantiate_dataclass(ServerFarm, raw_server_farm_data)
+    server_farm = instantiate_dataclass(
+        ServerFarm,
+        data={
+            "name": "farm1",
+            "hosts": [
+                {
+                    "ip_addresses": ["192.168.0.1", "127.0.0.1"],
+                    "nodes": [{"lat": 0.0, "long": 0.0}, {"lat": 1.0, "long": 1.0}],
+                }
+            ],
+        },
+    )
     assert server_farm.name == "farm1"
     assert server_farm.hosts[0].ip_addresses == ["192.168.0.1", "127.0.0.1"]
     assert server_farm.hosts[0].nodes[0].lat == 0.0
     assert server_farm.hosts[0].nodes[0].long == 0.0
+
+
+def test_missing_dataclass_fields_raises() -> None:
+    with pytest.raises(ValueError):
+        instantiate_dataclass(
+            Invoice,
+            data={
+                "number": "001",
+                "date": "2021-01-01",
+                "line_items": [
+                    {
+                        "name": "item1",
+                        "description": "item1 description",
+                        "number": 1,
+                    },
+                    {
+                        "name": "item2",
+                        "description": "item2 description",
+                        "number": "2",
+                    },
+                ],
+            },
+        )
+
+    with pytest.raises(ValueError):
+        instantiate_dataclass(
+            Invoice,
+            data={
+                "number": "001",
+                "date": "2021-01-01",
+            },
+        )
